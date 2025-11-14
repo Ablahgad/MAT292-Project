@@ -5,8 +5,8 @@ import numpy as np
 domain_x = 150
 domain_y = 45.7
 
-divisions_x = 10
-divisions_y = 10
+divisions_x = 100
+divisions_y = 100
 
 #create matrix with x and y intersections (nodal locations)
 nodes = np.zeros(((divisions_x * divisions_y), 2))
@@ -28,3 +28,6 @@ for i in range(divisions_x):
 #print values in matrix
 print(nodes)
 print(nodes.shape)
+
+print("file saved")
+np.savetxt(r"C:\Users\22cia\Documents\nodes.txt", nodes, fmt="%.6f", header="x y", comments='')
