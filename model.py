@@ -59,6 +59,10 @@ for i in range(divisions_x):
     sum_s += ds
     s.append(sum_s)
 
+head = -4.5
+tail = 9
+thickness = 1
+
 
 # Defining the function of x with respect to the parameter s
 def f_x(s, head, tail):
@@ -83,14 +87,13 @@ scale_modifier = thickness/10
 def y_tail(x, t):
     return scale_modifier*(2.7826*x - 0.1485*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))+thickness/4
 
-head = -4.5
-tail = 9
-thickness = 1
 
-dt = 1 #time step for movement of fish tail
+dt = 0.1 #time step for movement of fish tail
 # t = 0.01
 
-for t in range(1, 5, dt):
+L_file_names = []
+
+for t in np.arange(0, 5, dt):
 
     file_text = ""
 
@@ -112,5 +115,11 @@ for t in range(1, 5, dt):
 
         file_text += str(node)
 
-    with open("nodes" +str(t)+ ".txt", "w") as file:
+    with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
         file.write(file_text)
+
+    L_file_names.append("dataout/nodes" +str(t)+ ".txt")
+
+
+    # with open("dataout/filenames.txt", "w") as file:
+        # file.write(str(L_file_names))
