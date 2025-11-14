@@ -53,13 +53,32 @@ for i in range(divisions_x):
     s.append(sum_s)
 
 
-#Defining the function of x with respect to the parameter s
+# Defining the function of x with respect to the parameter s
 def f_x(s, head, tail):
     return head+tail*s
     # Head is the starting point of the head at the left, head+tail is the end point of the tail
     # Ex. head = -4.5, tail = 9 means that the fish starts at -4.5 and ends at 5
 
+# Defining the function of s with respect to x, same head and tail as in f_x
+def f_s(x, head, tail):
+    return (x-head)/tail
+
 def f_y(s, thickness):
     return thickness/0.2*(0.2969*math.sqrt(s) - 0.126*s - 0.3516*s**2 + 0.2843*s**3-0.1036*s**4)
-    # Thickness is the width of the thickest point of the fish
+    # Thickness is the width of the thickest point of the fish, ex. thickness = 1
+
+# L_x = [L_nodes[i].x for i in range(len(L_nodes))]
+# L_y = [L_nodes[i].y for i in range(len(L_nodes))]
+
+head = -4.5
+tail = 9
+thickness = 1
+
+for node in L_nodes:
+    s_i = f_s(node.x, head, tail)
+    y_i = f_y(s_i, thickness)
+    if node.y>(-1)*y_i and node.y<y_i:
+        node.chi = 1
+    else:
+        node.chi = 0
 
