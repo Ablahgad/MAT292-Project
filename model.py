@@ -8,6 +8,9 @@ class Node:
         self.x = x
         self.y = y
 
+    def __str__(self):
+        return f"{self.x} {self.y} {self.chi} \n"
+
 # Create list of Node objects
 L_nodes = []
 
@@ -31,6 +34,7 @@ for i in range(divisions_x):
     #loop through all rows
     for j in range(divisions_y):
         L_nodes.append(Node(i * d_x, j * d_y))
+
         x = i * d_x
         y = j * d_y
         nodes[index] = (x,y)
@@ -70,9 +74,12 @@ def f_y(s, thickness):
 # L_x = [L_nodes[i].x for i in range(len(L_nodes))]
 # L_y = [L_nodes[i].y for i in range(len(L_nodes))]
 
+
+
 head = -4.5
 tail = 9
 thickness = 1
+file_text = ""
 
 for node in L_nodes:
     s_i = f_s(node.x, head, tail)
@@ -82,3 +89,7 @@ for node in L_nodes:
     else:
         node.chi = 0
 
+    file_text += str(node)
+
+with open("nodes.txt", "w") as file:
+    file.write(file_text)
