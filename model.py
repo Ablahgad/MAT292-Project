@@ -5,9 +5,11 @@ domain_y = 45.7
 divisions_x = 10
 divisions_y = 10
 
-#n
+#create matrix with x and y intersections (nodal locations)
+for i in 
 
 #need inputs 
 #need a total number of nodes
 #store total number of nodes in a matrix
+
 
