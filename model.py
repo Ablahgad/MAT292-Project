@@ -15,11 +15,11 @@ class Node:
 L_nodes = []
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
-domain_x = 150
-domain_y = 45.7
+domain_x = 6 # supposed to be 150
+domain_y = 2 # supposed to be 45.7
 
-divisions_x = 100
-divisions_y = 100
+divisions_x = 10
+divisions_y = 10
 
 #create matrix with x and y intersections (nodal locations)
 nodes = np.zeros(((divisions_x * divisions_y), 2))
@@ -34,6 +34,9 @@ for i in range(divisions_x):
     #loop through all rows
     for j in range(divisions_y):
         L_nodes.append(Node(i * d_x, j * d_y))
+        L_nodes.append(Node(i * -1*d_x, j * -1*d_y))
+        L_nodes.append(Node(i * d_x, j * -1*d_y))
+        L_nodes.append(Node(i * -1*d_x, j * d_y))
 
         x = i * d_x
         y = j * d_y
@@ -70,6 +73,7 @@ def f_s(x, head, tail):
 def f_y(s, thickness):
     return thickness/0.2*(0.2969*math.sqrt(s) - 0.126*s - 0.3516*s**2 + 0.2843*s**3-0.1036*s**4)
     # Thickness is the width of the thickest point of the fish, ex. thickness = 1
+    # Based off of NACA thickness equation
 
 # L_x = [L_nodes[i].x for i in range(len(L_nodes))]
 # L_y = [L_nodes[i].y for i in range(len(L_nodes))]
@@ -83,9 +87,12 @@ file_text = ""
 
 for node in L_nodes:
     s_i = f_s(node.x, head, tail)
-    y_i = f_y(s_i, thickness)
-    if node.y>(-1)*y_i and node.y<y_i:
-        node.chi = 1
+    if s_i < 1 and s_i > 0:
+        y_i = f_y(s_i, thickness)
+        if node.y>(-1)*y_i and node.y<y_i:
+            node.chi = 1
+        else:
+            node.chi = 0
     else:
         node.chi = 0
 
