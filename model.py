@@ -30,4 +30,5 @@ print(nodes)
 print(nodes.shape)
 
 print("file saved")
-np.savetxt(r"C:\Users\22cia\Documents\nodes.txt", nodes, fmt="%.6f", header="x y", comments='')
+np.savetxt(r"C:\Users\22cia\Documents\nodes.txt", nodes, fmt="%.6f", comments='')
+
