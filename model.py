@@ -1,5 +1,15 @@
 #import libraries
 import numpy as np
+import math
+
+# Setting up Node object
+class Node:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+# Create list of Node objects
+L_nodes = []
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
 domain_x = 150
@@ -20,6 +30,7 @@ d_y = (domain_y/(divisions_y - 1))
 for i in range(divisions_x):
     #loop through all rows
     for j in range(divisions_y):
+        L_nodes.append(Node(i * d_x, j * d_y))
         x = i * d_x
         y = j * d_y
         nodes[index] = (x,y)
@@ -30,5 +41,25 @@ print(nodes)
 print(nodes.shape)
 
 print("file saved")
-np.savetxt(r"C:\Users\22cia\Documents\nodes.txt", nodes, fmt="%.6f", comments='')
+np.savetxt(r"nodes.txt", nodes, fmt="%.6f", comments='')
+
+
+# Initializing parameter for
+s = [0]
+ds = 1/divisions_x
+sum_s=0
+for i in range(divisions_x):
+    sum_s += ds
+    s.append(sum_s)
+
+
+#Defining the function of x with respect to the parameter s
+def f_x(s, head, tail):
+    return head+tail*s
+    # Head is the starting point of the head at the left, head+tail is the end point of the tail
+    # Ex. head = -4.5, tail = 9 means that the fish starts at -4.5 and ends at 5
+
+def f_y(s, thickness):
+    return thickness/0.2*(0.2969*math.sqrt(s) - 0.126*s - 0.3516*s**2 + 0.2843*s**3-0.1036*s**4)
+    # Thickness is the width of the thickest point of the fish
 
