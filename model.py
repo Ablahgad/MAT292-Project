@@ -79,6 +79,8 @@ def f_y(s, thickness):
 # L_y = [L_nodes[i].y for i in range(len(L_nodes))]
 
 
+def y_tail(x, t):
+    return (2.7826*x - 0.1485*x**2)*math.sin(2*math.pi*(x/29.766+0.25/t))
 
 head = -4.5
 tail = 9
@@ -100,3 +102,13 @@ for node in L_nodes:
 
 with open("nodes.txt", "w") as file:
     file.write(file_text)
+
+
+#Starting to work on movement of tail
+
+# dt = 1 #time step for movement of fish tail
+# t = 0.01
+# for node in L_nodes:
+#     if node.x > 0 and node.x<tail+head:
+#         y_i = y_tail(node.x, t)
+#
