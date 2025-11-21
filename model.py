@@ -38,10 +38,16 @@ for i in range(divisions_x):
         L_nodes.append(Node(i * d_x, j * -1*d_y))
         L_nodes.append(Node(i * -1*d_x, j * d_y))
 
+
+        #Initialize pressures and temperatures ****
+
+
         x = i * d_x
         y = j * d_y
         nodes[index] = (x,y)
         index += 1
+
+
 
 #print values in matrix
 print(nodes)
