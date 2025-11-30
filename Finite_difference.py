@@ -15,6 +15,7 @@ dy = 1
 
 for i in range(len(L_nodes)):
 
+    node = L_nodes[i]
 
     '''
     BRINKMAN PENALIZATION
@@ -25,12 +26,12 @@ for i in range(len(L_nodes)):
         node.Fx = -1*chi/nu*(node.vx-v_body)
         node.Fy = -1*chi/nu*(node.vy-v_body)
 
-    # need info or equation for v_body ***
+    # need info or equation for v_body --> use period of the tail***
 
     '''
     FINITE DIFFERENCE ESTIMATIONS OF SLOPES
     '''
-    dv_dx = (v[0][i+1][j] - v[0][i-1][j])/2/dx
+    dv_dx = (node.vx[i+1][j] - v[0][i-1][j])/2/dx
     dv_dy = (v[1][i][j+1] - v[1][i][j-1])/2/dy
 
     # Laplacian operator

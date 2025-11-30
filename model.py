@@ -11,9 +11,6 @@ class Node:
     def __str__(self):
         return f"{self.x} {self.y} {self.chi} \n"
 
-# Create list of Node objects
-L_nodes = []
-
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
 domain_x = 6 # supposed to be 150
 domain_y = 2 # supposed to be 45.7
@@ -21,50 +18,54 @@ domain_y = 2 # supposed to be 45.7
 divisions_x = 10
 divisions_y = 10
 
+# Create list of Node objects
+L_nodes=[]
+for i in range(divisions_y*2):
+    L=[0]*divisions_x*2
+    L_nodes.append(L)
+
+L_nodes_print=[]
+for i in range(divisions_y*2):
+    L=[0]*divisions_x*2
+    L_nodes_print.append(L)
+
 #create matrix with x and y intersections (nodal locations)
 nodes = np.zeros(((divisions_x * divisions_y), 2))
 
 #initialize loop variables
-index = 0
+
 d_x = (domain_x/(divisions_x - 1))
 d_y = (domain_y/(divisions_y - 1))
+x = [d_x*i for i in range(divisions_x)]
+x_alt = [i*-1 for i in x]
+x.reverse()
+for i in x_alt:
+    x.append(i)
+x.reverse()
 
+y = [d_y*i for i in range(divisions_y)]
+y_alt = [i*-1 for i in y]
+y.reverse()
+for i in y_alt:
+    y.append(i)
+y.reverse()
+
+index = 0
 #loop through all columns
-for i in range(divisions_x):
+for x_i in x:
     #loop through all rows
-    for j in range(divisions_y):
-        L_nodes.append(Node(i * d_x, j * d_y))
-        L_nodes.append(Node(i * -1*d_x, j * -1*d_y))
-        L_nodes.append(Node(i * d_x, j * -1*d_y))
-        L_nodes.append(Node(i * -1*d_x, j * d_y))
+    for y_i in y:
+        L_nodes[index%(divisions_x*2)][index//(divisions_y*2)]=Node(x_i, y_i)
+        L_nodes[index%(divisions_x*2)][index//(divisions_y*2)].chi = 1
 
 
         #Initialize pressures and temperatures ****
 
 
-        x = i * d_x
-        y = j * d_y
-        nodes[index] = (x,y)
+        L_nodes_print[index%(divisions_x*2)][index//(divisions_y*2)]=str(L_nodes[index%(divisions_x*2)][index//(divisions_y*2)])
         index += 1
 
-
-
-#print values in matrix
-print(nodes)
-print(nodes.shape)
-
-print("file saved")
-np.savetxt(r"nodes.txt", nodes, fmt="%.6f", comments='')
-
-
-# Initializing parameter for
-s = [0]
-ds = 1/divisions_x
-sum_s=0
-for i in range(divisions_x):
-    sum_s += ds
-    s.append(sum_s)
-
+# Initializing parameters for tail equations
 head = -4.5
 tail = 9
 thickness = 1
@@ -85,8 +86,6 @@ def f_y(s, thickness):
     # Thickness is the width of the thickest point of the fish, ex. thickness = 1
     # Based off of NACA thickness equation
 
-# L_x = [L_nodes[i].x for i in range(len(L_nodes))]
-# L_y = [L_nodes[i].y for i in range(len(L_nodes))]
 
 scale_modifier = thickness/10
 
@@ -95,31 +94,36 @@ def y_tail(x, t):
 
 
 dt = 0.1 #time step for movement of fish tail
-# t = 0.01
 
 L_file_names = []
 
+# changing chi for whether or not the datapoint is within the fish
 for t in np.arange(0, 5, dt):
 
     file_text = ""
+    index = 0
+    for xi in x:
+        for yi in y:
+            i = index%(divisions_x*2)
+            j = index//(divisions_y*2)
 
-    for node in L_nodes:
-        s_i = f_s(node.x, head, tail)
-        if s_i < 1 and s_i > 0:
-            if node.x > 0:
-                y_i = y_tail(node.x, t)
-                y_i_bot =  y_tail(node.x, t)-f_y(s_i, thickness)-thickness/4
+            s_i = f_s(xi, head, tail)
+            if s_i < 1 and s_i > 0:
+                if xi > 0:
+                    y_i = y_tail(xi, t)
+                    y_i_bot =  y_tail(xi, t)-f_y(s_i, thickness)-thickness/4
+                else:
+                    y_i = f_y(s_i, thickness)
+                    y_i_bot = -1*f_y(s_i, thickness)
+                if yi>y_i_bot and yi<y_i:
+                    L_nodes[i][j].chi = 1
+                else:
+                    L_nodes[i][j].chi = 0
             else:
-                y_i = f_y(s_i, thickness)
-                y_i_bot = -1*f_y(s_i, thickness)
-            if node.y>y_i_bot and node.y<y_i:
-                node.chi = 1
-            else:
-                node.chi = 0
-        else:
-            node.chi = 0
+                L_nodes[i][j].chi = 0
+            index += 1
 
-        file_text += str(node)
+            file_text += str(L_nodes[i][j])
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
         file.write(file_text)
@@ -127,5 +131,5 @@ for t in np.arange(0, 5, dt):
     L_file_names.append("dataout/nodes" +str(t)+ ".txt")
 
 
-    # with open("dataout/filenames.txt", "w") as file:
-        # file.write(str(L_file_names))
+    with open("dataout/filenames.txt", "w") as file:
+        file.write(str(L_file_names))
