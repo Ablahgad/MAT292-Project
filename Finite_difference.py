@@ -1,66 +1,71 @@
 #Assume each Node starts with an x, y, chi, vx, vy, Px, Py
 
-from model import L_nodes
+from model import L_nodes, d_x, d_y, dt
 
 '''
 CONSTANTS
 '''
-dt = 1 #time step
 rho = 1 #density
 kv = 1 # kinematic viscosity
 
-dx = 1
-dy = 1
+# nu is time penalty in Brinkman Penalization, determines how fast the velocity changes to the body velocity, the larger it is the more fluid it lets into the fish, smaller it is the faster the velocity change (recommended between 0.1 and 1)
+nu = 0.5
 
 
-for i in range(len(L_nodes)):
+for i in range(len(L_nodes)-1):
+    for j in range(len(L_nodes[0])-1)
+        # the node at i, j is L_nodes[i][j]
 
-    node = L_nodes[i]
+        '''
+        BRINKMAN PENALIZATION
+        '''
+        # chi equal to one inside the body of the fish, zero outside the fish
+            L_nodes[i][j].Fx = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vx-v_body)
+            L_nodes[i][j].Fy = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vy-v_body)
 
-    '''
-    BRINKMAN PENALIZATION
-    '''
-    # chi equal to one inside the body of the fish, zero outside the fish
-    # nu is time penalty, determines how fast the velocity changes to the body velocity, the larger it is the more fluid it lets into the fish, smaller it is the faster the velocity change (recommended between 0.1 and 1)
+        # need info or equation for v_body --> use period of the tail***
 
-        node.Fx = -1*chi/nu*(node.vx-v_body)
-        node.Fy = -1*chi/nu*(node.vy-v_body)
+        '''
+        FINITE DIFFERENCE ESTIMATIONS OF SLOPES
+        '''
+        dv_dx = (L_nodes[i+1][j].vx - L_nodes[i-1][j].vx)/2/d_x
+        dv_dy = (L_nodes[i][j+1].vy - L_nodes[i][j-1].vy)/2/d_y
 
-    # need info or equation for v_body --> use period of the tail***
+        # Laplacian operator
+        D2v = (L_nodes[i+1][j].vx -2*L_nodes[i][j].vx + L_nodes[i-1][j].vx)/d_x**2 + (L_nodes[i][j+1].vy -2*L_nodes[i][j].vy + L_nodes[i][j-1].vy)/d_y**2
 
-    '''
-    FINITE DIFFERENCE ESTIMATIONS OF SLOPES
-    '''
-    dv_dx = (node.vx[i+1][j] - v[0][i-1][j])/2/dx
-    dv_dy = (v[1][i][j+1] - v[1][i][j-1])/2/dy
+        dP_dx = (L_nodes[i+1][j].Px - L_nodes[i-1][j].Px)/2/d_x
+        dP_dy = (L_nodes[i][j+1].Py - L_nodes[i][j-1].Py)/2/d_y
 
-    # Laplacian operator
-    D2v = (v[0][i+1][j] -2*v[0][i][j] + v[0][i-1][j])/dx**2 + (v[1][i][j+1] -2*v[1][i][j] + v[1][i][j-1])/dy**2
-
-    dP_dx = (P[0][i+1][j] - P[0][i-1][j])/2/dx
-    dP_dy = (P[1][i][j+1] - P[1][i][j-1])/2/dy
-
-    '''
-    ACTUAL NAVIER-STOKES
-    '''
-    dv_dt = -1*(v[0]*dv_dx + v[1]*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*F
-
-    v_star = v + dt*dv_dt #returns both x and y components
+        '''
+        ACTUAL NAVIER-STOKES
+        '''
+        dv_dtx = -1*(L_nodes[i][j].vx*dv_dx + L_nodes[i][j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*L_nodes[i][j].Fx
+        dv_dtx = -1*(L_nodes[i][j].vx*dv_dx + L_nodes[i][j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*L_nodes[i][j].Fy
 
 
-    '''
-    JACOBIAN ITERATION
-    '''
-
-    b[i][j] = rho/dt*((v_star[0][i+1][j]-v_star[0][i-1][j])/2/dx + v_star[1][i][j+1]-v_star[1][i][j-1])/2/dy)
-
-    P[i, j] = (P[i+1][j] + P[i-1][j] + P[i][j+1] + P[i][j-1] - b[i][j]*dx**2)/4
+        L_nodes[i][j].v_starx = L_nodes[i][j].vx + dt*dv_dtx
+        L_nodes[i][j].v_stary = L_nodes[i][j].vy + dt*dv_dty
 
 
-    '''
-    PRESSURE CORRECTED V
-    '''
+        '''
+        JACOBIAN ITERATION
+        '''
 
-    v_next = v_star - dt/rho*(P[i+1, j] - P[i-1, j])/2/dx
+        b = rho/dt*((L_nodes[i+1][j].v_starx-L_nodes[i-1][j].v_starx)/2/dx + L_nodes[i][j+1].v_stary-L_nodes[i][j-1].v_stary)/2/d_y)
+
+
+        L_nodes[i][j].Px = (L_nodes[i+1][j].Px + L_nodes[i-1][j].Px + L_nodes[i][j+1].Px + L_nodes[i][j-1].Px - b*d_x**2)/4
+        L_nodes[i][j].Py = (L_nodes[i+1][j].Py + L_nodes[i-1][j].Py + L_nodes[i][j+1].Py + L_nodes[i][j-1].Py - b*d_x**2)/4
+
+
+        '''
+        PRESSURE CORRECTED V
+        '''
+
+        L_nodes[i][j].vx = L_nodes[i][j].v_starx - dt/rho*(L_nodes[i+1][j].Px - L_nodes[i-1][j].Px)/2/d_x
+        L_nodes[i][j].vy = L_nodes[i][j].v_stary - dt/rho*(L_nodes[i+1][j].Py - L_nodes[i-1][j].Py)/2/d_y
+
+
 
 
