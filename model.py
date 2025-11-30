@@ -9,7 +9,7 @@ class Node:
         self.y = y
 
     def __str__(self):
-        return f"{self.x} {self.y} {self.chi} \n"
+        return f"{self.x} {self.y} {self.chi} {self.vx} {self.vy} \n"
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
 domain_x = 6 # supposed to be 150
@@ -58,6 +58,8 @@ for x_i in x:
         L_nodes[index%(divisions_x*2)][index//(divisions_y*2)]=Node(x_i, y_i)
         L_nodes[index%(divisions_x*2)][index//(divisions_y*2)].chi = 1
 
+        L_nodes[index%(divisions_x*2)][index//(divisions_y*2)].vx = 1
+        L_nodes[index%(divisions_x*2)][index//(divisions_y*2)].vy = 1
 
         #Initialize pressures and temperatures ****
 
@@ -93,7 +95,7 @@ def y_tail(x, t):
     return scale_modifier*(2.7826*x - 0.1485*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))+thickness/4
 
 
-dt = 0.1 #time step for movement of fish tail
+dt = 0.5 #time step for movement of fish tail
 
 L_file_names = []
 
@@ -117,6 +119,8 @@ for t in np.arange(0, 5, dt):
                     y_i_bot = -1*f_y(s_i, thickness)
                 if yi>y_i_bot and yi<y_i:
                     L_nodes[i][j].chi = 1
+                    L_nodes[i][j].vx = 0
+                    L_nodes[i][j].vy = 0
                 else:
                     L_nodes[i][j].chi = 0
             else:
