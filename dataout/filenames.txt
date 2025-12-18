@@ -1,1 +1,1 @@
-['dataout/nodes0.0.txt', 'dataout/nodes0.5.txt', 'dataout/nodes1.0.txt', 'dataout/nodes1.5.txt', 'dataout/nodes2.0.txt', 'dataout/nodes2.5.txt', 'dataout/nodes3.0.txt', 'dataout/nodes3.5.txt', 'dataout/nodes4.0.txt', 'dataout/nodes4.5.txt']
+['dataout/nodes0.txt', 'dataout/nodes4.txt']
