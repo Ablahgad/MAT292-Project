@@ -1,6 +1,6 @@
 #Assume each Node starts with an x, y, chi, vx, vy, Px, Py
 
-from model import L_nodes, d_x, d_y, dt
+from model import D_nodes, d_x, d_y, dt, x, y
 
 '''
 CONSTANTS
@@ -12,16 +12,22 @@ kv = 1 # kinematic viscosity
 nu = 0.5
 
 
-for i in range(len(L_nodes)-1):
-    for j in range(len(L_nodes[0])-1)
-        # the node at i, j is L_nodes[i][j]
+for i in range(1, len(x)-1):
+    for j in range(1, len(y)-1):
+        i_j = str(x[i]) + ' ' + str(y[j])
+        i1_j = str(x[i+1]) + ' ' + str(y[j])
+        i_j1 = str(x[i]) + ' ' + str(y[j+1])
+        im1_j = str(x[i-1]) + ' ' + str(y[j])
+        i_jm1 = str(x[i]) + ' ' + str(y[j-1])
+        im1_jm1 = str(x[i-1]) + ' ' + str(y[j-1])
+        i1_j1 = str(x[i+1]) + ' ' + str(y[j+1])
 
         '''
         BRINKMAN PENALIZATION
         '''
         # chi equal to one inside the body of the fish, zero outside the fish
-            L_nodes[i][j].Fx = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vx-v_body)
-            L_nodes[i][j].Fy = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vy-v_body)
+        L_nodes[i][j].Fx = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vx-v_body)
+        L_nodes[i][j].Fy = -1*L_nodes[i][j].chi/nu*(L_nodes[i][j].vy-v_body)
 
         # need info or equation for v_body --> use period of the tail***
 

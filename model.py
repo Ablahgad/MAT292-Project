@@ -4,6 +4,7 @@ This is the standard code for the model and motion of the fish, as well as the b
 
 
 #import libraries
+from scipy.integrate import quad
 import numpy as np
 import math
 
@@ -17,11 +18,11 @@ class Node:
         return f"{self.x} {self.y} {self.chi} {self.vx} {self.vy} \n" # Add any new variables that are important to the visualization here, MATLAB only has what is printed out as a text file from this code
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
-domain_x = 50 # full x dimension of tube is 150mm
+domain_x = 30 # full x dimension of tube is 150mm
 domain_y = 10 # full y dimension of tube is 45.7
 
-divisions_x = 30
-divisions_y = 30
+divisions_x = 20
+divisions_y = 20
 
 D_nodes = {} #dictionary that stores all the nodes, keys are str(x_coordinate) + " " + str(y_coordinate)
 
@@ -63,12 +64,14 @@ for x_i in x:
         D_nodes[i_dict].vx = 1
         D_nodes[i_dict].vy = 1
 
+
 # Initializing parameters for tail equations
-head = -35/2
-tail = 35
+fish_length = 34
+head = -1*fish_length/2
+tail = fish_length
     # Head is the starting point of the head at the left, head+tail is the end point of the tail
     # Ex. head = -4.5, tail = 9 means that the fish starts at -4.5 and ends at 5
-thickness = 3
+thickness = 3.5
     # Thickness is the width of the thickest point of the fish, ex. thickness = 1
 
 
@@ -84,17 +87,21 @@ def f_s(x, head, tail):
 def f_y(s, thickness):
     return thickness/0.2*(0.2969*math.sqrt(s) - 0.126*s - 0.3516*s**2 + 0.2843*s**3-0.1036*s**4)
     # Based off of NACA thickness equation
-
-
-scale_modifier = thickness
-
+#2.7826*x - 0.1485*x**2
+#-1.2958*x + 0.5105*x**2
 def y_tail(x, t):
-    return (2.7826*x - 0.1485*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))+thickness/4
-
+    return (-1.2958*x + 0.5105*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10 + thickness/4
 def v_tail(x, t):
-    return (2.7826*x - 0.1485*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))+thickness/4
+    return (-1.2958*x + 0.5105*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))/10
 
-dt = 4 #time step for movement of fish tail
+def dy_dx_tail(x, t):
+    return (-1.2958*x + 0.5105*x**2)*2*math.pi/29.766*math.cos(2*math.pi*(x/29.766+0.25*t))/10 + (-1.2958 + 0.5105*x*2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10
+def tail_length_helper(x, t):
+    return 1+dy_dx_tail(x, t)**2 #using the v_tail formula here as the derivative of
+
+    #using arc length formula to find length of tail at x coordinate b starting from the base of the tail (x=0)
+
+dt = 0.2 #time step for movement of fish tail
 
 L_file_names = []
 # list of file names that will be read by MATLAB
@@ -115,7 +122,11 @@ for t in np.arange(0, 5, dt):
             if s_i < 1 and s_i > 0:
                 if xi > 0:
                     y_i = y_tail(xi, t)
-                    y_i_bot =  y_tail(xi, t)-f_y(s_i, thickness)-thickness/4
+                    tail_length = quad(tail_length_helper, 0, xi, args=(t))[0]
+                    if (tail_length<=fish_length/2):
+                        y_i_bot =  y_tail(xi, t)-f_y(s_i, thickness)-thickness/4
+                    else:
+                        y_i_bot = y_i
                 else:
                     y_i = f_y(s_i, thickness)
                     y_i_bot = -1*f_y(s_i, thickness)
