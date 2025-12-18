@@ -56,12 +56,12 @@ for x_i in x:
     #loop through all rows
     for y_i in y:
         i_dict = str(x_i) + " "+ str(y_i)
-        L_dict[i_dict]=Node(x_i, y_i)
+        D_nodes[i_dict]=Node(x_i, y_i)
 
-        L_dict[i_dict].chi = 1
+        D_nodes[i_dict].chi = 1
 
-        L_dict[i_dict].vx = 1
-        L_dict[i_dict].vy = 1
+        D_nodes[i_dict].vx = 1
+        D_nodes[i_dict].vy = 1
 
 # Initializing parameters for tail equations
 head = -35/2
@@ -108,8 +108,8 @@ for t in np.arange(0, 5, dt):
         for yi in y:
             i_dict = str(xi) + " "+ str(yi)
 
-            L_dict[i_dict].vx = 1
-            L_dict[i_dict].vy = 1
+            D_nodes[i_dict].vx = 1
+            D_nodes[i_dict].vy = 1
 
             s_i = f_s(xi, head, tail)
             if s_i < 1 and s_i > 0:
@@ -120,18 +120,18 @@ for t in np.arange(0, 5, dt):
                     y_i = f_y(s_i, thickness)
                     y_i_bot = -1*f_y(s_i, thickness)
                 if yi>y_i_bot and yi<y_i:
-                    L_dict[i_dict].chi = 1
-                    L_dict[i_dict].vx = 0
-                    L_dict[i_dict].vy = 0
+                    D_nodes[i_dict].chi = 1
+                    D_nodes[i_dict].vx = 0
+                    D_nodes[i_dict].vy = 0
                     if xi > 0:
-                        L_dict[i_dict].vbody = v_tail(xi, t)
+                        D_nodes[i_dict].vbody = v_tail(xi, t)
                 else:
-                    L_dict[i_dict].chi = 0
+                    D_nodes[i_dict].chi = 0
             else:
-                L_dict[i_dict].chi = 0
+                D_nodes[i_dict].chi = 0
             index += 1
 
-            file_text += str(L_dict[i_dict])
+            file_text += str(D_nodes[i_dict])
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
         file.write(file_text)
