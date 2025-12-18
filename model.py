@@ -61,8 +61,11 @@ for x_i in x:
 
         D_nodes[i_dict].chi = 1
 
-        D_nodes[i_dict].vx = 1
-        D_nodes[i_dict].vy = 1
+        D_nodes[i_dict].vx = 26 #using 26mm/s to compare against the cruising data from the paper
+        D_nodes[i_dict].vy = 0
+
+        D_nodes[i_dict].Px =
+        D_nodes[i_dict].Py =
 
 
 # Initializing parameters for tail equations
@@ -87,8 +90,7 @@ def f_s(x, head, tail):
 def f_y(s, thickness):
     return thickness/0.2*(0.2969*math.sqrt(s) - 0.126*s - 0.3516*s**2 + 0.2843*s**3-0.1036*s**4)
     # Based off of NACA thickness equation
-#2.7826*x - 0.1485*x**2
-#-1.2958*x + 0.5105*x**2
+
 def y_tail(x, t):
     return (-1.2958*x + 0.5105*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10 + thickness/4
 def v_tail(x, t):
