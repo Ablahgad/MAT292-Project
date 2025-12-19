@@ -14,13 +14,13 @@ class Node:
         self.x = x
         self.y = y
 
-        self.vx = 1 #!!! change to 26
+        self.vx = 26
         self.vy = 0
 
         self.vbody = 0
 
-        # self.Px =
-        # self.Py =
+        self.Px = 0
+        self.Py = 0 #Initialize both of the pressures to zero, every resulting pressure is relative to the initial pressure within the swimming tube
 
         self.chi = 0
 
@@ -70,7 +70,10 @@ for x_i in x:
         D_nodes[i_dict]=Node(x_i, y_i)
 
 
-# Initializing parameters for tail equations
+'''
+Initializing parameters for tail equations
+'''
+
 fish_length = 34
 head = -1*fish_length/2
 tail = fish_length
@@ -103,7 +106,9 @@ def dy_dx_tail(x, t):
 def tail_length_helper(x, t):
     return 1+dy_dx_tail(x, t)**2 #using the v_tail formula here as the derivative of
 
-    #using arc length formula to find length of tail at x coordinate b starting from the base of the tail (x=0)
+'''
+MAIN LOOP
+'''
 
 dt = 1 #time step for movement of fish tail
 
@@ -119,23 +124,31 @@ for t in np.arange(0, 5, dt):
     index = 0
     for xi in x:
         for yi in y:
+
+            '''
+            Updating where the fish is
+            '''
             i_dict = str(xi) + " "+ str(yi)
 
             s_i = f_s(xi, head, tail)
             if s_i < 1 and s_i > 0:
                 if xi > 0:
                     y_i = y_tail(xi, t)
+
+                    #using arc length formula to find length of tail at x coordinate b starting from the base of the tail (x=0)
                     tail_length = quad(tail_length_helper, 0, xi, args=(t))[0]
-                    if (tail_length<=fish_length/2):
+
+                    if (tail_length<=fish_length/2): #ensuring that the displayed tail doesn't randomly grow longer and shorter
                         y_i_bot =  y_tail(xi, t)-f_y(s_i, thickness)-thickness/4
                     else:
                         y_i_bot = y_i
+
                 else:
                     y_i = f_y(s_i, thickness)
                     y_i_bot = -1*f_y(s_i, thickness)
 
 
-                if yi>y_i_bot and yi<y_i:
+                if yi>y_i_bot and yi<y_i: #If
                     D_nodes[i_dict].chi = 1
 
                     if xi > 0:
@@ -152,6 +165,10 @@ for t in np.arange(0, 5, dt):
 
                 file_text += str(D_nodes[i_dict])
             index += 1
+
+            '''
+            This is where each of the numerical methods go
+            '''
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
         file.write(file_text)
