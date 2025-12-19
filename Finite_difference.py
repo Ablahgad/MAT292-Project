@@ -15,14 +15,14 @@ rho = 1 #density
 kv = 1 # kinematic viscosity
 
 # nu is time penalty in Brinkman Penalization, determines how fast the velocity changes to the body velocity, the larger it is the more fluid it lets into the fish, smaller it is the faster the velocity change (recommended between 0.1 and 1)
-nu = 0.05
+nu = 0.005
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
-domain_x = 30 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
-domain_y = 10 # full y dimension of tube is 45.7
+domain_x = 51.6 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
+domain_y = 26.7 # full y dimension of tube is 45.7
 
-divisions_x = 15
-divisions_y = 15
+divisions_x = 14
+divisions_y = 7
 
 D_nodes = {} #dictionary that stores all the nodes, keys are str(x_coordinate) + " " + str(y_coordinate)
 
@@ -55,7 +55,7 @@ INITIALIZING ARRAYS
 
 X, Y = np.meshgrid(x, y, indexing='ij') #array that holds x and y postion values in mm for each node
 
-vx = np.zeros((divisions_x*2, divisions_y*2))
+vx = np.full((divisions_x*2, divisions_y*2), 26)
 
 vy = np.zeros((divisions_x*2, divisions_y*2))
 
@@ -109,7 +109,7 @@ def f_y(s, thickness):
 def y_tail(x, t):
     return (-1.2958*x + 0.5105*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10 + thickness/4
 def v_tail(x, t):
-    return (-1.2958*x + 0.5105*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))/10
+    return (-1.2958*x + 0.5105*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))/10 + 20
 
 def dy_dx_tail(x, t):
     return (-1.2958*x + 0.5105*x**2)*2*math.pi/29.766*math.cos(2*math.pi*(x/29.766+0.25*t))/10 + (-1.2958 + 0.5105*x*2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10
@@ -120,7 +120,7 @@ def tail_length_helper(x, t):
 MAIN LOOP
 '''
 
-dt = 0.002 #time step for movement of fish tail
+dt = 0.001 #time step for movement of fish tail
 
 L_file_names = []
 L_fish_file_names = []
@@ -224,7 +224,7 @@ for t in np.arange(0, 0.006, dt):
                 for n in range(1, len(x)-1):
                     for m in range(1, len(y)-1):
                         P[n, m] = (P[n+1, m] + P[n-1, m] + P[n, m+1] + P[n, m-1] - b[n, m]*d_x**2)/4
-                print(k)
+                        vx[0, m] = 26
 
             '''
             PRESSURE CORRECTED V
@@ -232,8 +232,8 @@ for t in np.arange(0, 0.006, dt):
             vx[i, j] = v_starx[i, j] - dt/rho*(P[i+1, j] - P[i-1, j])/2/d_x
             vy[i, j] = v_stary[i, j] - dt/rho*(P[i+1, j] - P[i-1, j])/2/d_y
 
-
-            file_text += f"{X[i, j]} {Y[i, j]} {chi[i, j]} {vx[i, j]} {vy[i, j]} {vbodyx[i, j]} {vbodyy[i, j]} \n"
+            if chi[i, j] == 0:
+                file_text += f"{X[i, j]} {Y[i, j]} {chi[i, j]} {vx[i, j]} {vy[i, j]} {vbodyx[i, j]} {vbodyy[i, j]} \n"
 
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
