@@ -1,5 +1,5 @@
 '''
-This is the standard code for the model and motion of the fish, as well as the basic information sent to MATLAB for visualization. Each of the specific numerical methods will expand on this code to include the actual fluid dynamics expected of the interaction between the fish and water.
+This is the model code specified for the finite difference numerical analysis model
 '''
 
 
@@ -8,32 +8,6 @@ from scipy.integrate import quad
 import numpy as np
 import math
 
-# Setting up Node object
-class Node:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-        self.vx = 26
-        self.vy = 0
-
-        self.vbodyy = 0
-        self.vbodyx = 0
-
-        self.P = 0 #Pressure to zero, every resulting pressure is relative to the initial pressure within the swimming tube
-
-        self.chi = 0
-
-        self.v_starx = 0
-        self.v_stary = 0
-
-        self.Fx = 0
-        self.Fy = 0
-
-        self.b = 0
-
-    def __str__(self):
-        return f"{self.x} {self.y} {self.chi} {self.vx} {self.vy} {self.vbodyx} {self.vbodyy}\n" # Add any new variables that are important to the visualization here, MATLAB only has what is printed out as a text file from this code
 '''
 CONSTANTS
 '''
@@ -44,11 +18,11 @@ kv = 1 # kinematic viscosity
 nu = 0.05
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
-domain_x = 30 # full x dimension of tube is 150mm
+domain_x = 30 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
 domain_y = 10 # full y dimension of tube is 45.7
 
-divisions_x = 20
-divisions_y = 20
+divisions_x = 15
+divisions_y = 15
 
 D_nodes = {} #dictionary that stores all the nodes, keys are str(x_coordinate) + " " + str(y_coordinate)
 
@@ -76,14 +50,34 @@ y.reverse()
 # y contains all of the y coordinates of the nodes
 
 '''
-INITIALIZATION LOOP
+INITIALIZING ARRAYS
 '''
-#loop through all columns
-for x_i in x:
-    #loop through all rows
-    for y_i in y:
-        i_j = str(x_i) + " "+ str(y_i)
-        D_nodes[i_j]=Node(x_i, y_i)
+
+X, Y = np.meshgrid(x, y, indexing='ij') #array that holds x and y postion values in mm for each node
+
+vx = np.zeros((divisions_x*2, divisions_y*2))
+
+vy = np.zeros((divisions_x*2, divisions_y*2))
+
+vbodyy = np.zeros((divisions_x*2, divisions_y*2))
+
+vbodyx = np.zeros((divisions_x*2, divisions_y*2))
+
+P = np.zeros((divisions_x*2, divisions_y*2))
+
+chi = np.zeros((divisions_x*2, divisions_y*2))
+
+v_starx = np.zeros((divisions_x*2, divisions_y*2))
+
+v_stary = np.zeros((divisions_x*2, divisions_y*2))
+
+Fx = np.zeros((divisions_x*2, divisions_y*2))
+
+Fy = np.zeros((divisions_x*2, divisions_y*2))
+
+b = np.zeros((divisions_x*2, divisions_y*2))
+
+
 
 
 '''
@@ -140,22 +134,15 @@ for t in np.arange(0, 0.006, dt):
     index = 0
     for i in range(1, len(x)-1):
         for j in range(1, len(y)-1):
-            i_j = str(x[i]) + ' ' + str(y[j])
-            i1_j = str(x[i+1]) + ' ' + str(y[j])
-            i_j1 = str(x[i]) + ' ' + str(y[j+1])
-            im1_j = str(x[i-1]) + ' ' + str(y[j])
-            i_jm1 = str(x[i]) + ' ' + str(y[j-1])
-            im1_jm1 = str(x[i-1]) + ' ' + str(y[j-1])
-            i1_j1 = str(x[i+1]) + ' ' + str(y[j+1])
 
             '''
             Updating where the fish is
             '''
             # resetting forces and body velocity for each node
-            D_nodes[i_j].Fx = 0
-            D_nodes[i_j].Fy = 0
-            D_nodes[i_j].vbodyx = 0
-            D_nodes[i_j].vbodyy = 0
+            Fx[i, j] = 0
+            Fy[i, j] = 0
+            vbodyx[i, j] = 0
+            vbodyy[i, j] = 0
 
             s_i = f_s(x[i], head, tail)
             if s_i < 1 and s_i > 0:
@@ -176,101 +163,77 @@ for t in np.arange(0, 0.006, dt):
 
 
                 if y[j]>y_i_bot and y[j]<y_i: #If coordinate is within the body of the fish
-                    D_nodes[i_j].chi = 1
+                    chi[i, j] = 1
 
 
                     if x[i] > 0:
-                        D_nodes[i_j].vbodyy = v_tail(x[i], t)
+                        vbodyy[i, j] = v_tail(x[i], t)
 
                     '''
                     BRINKMAN PENALIZATION
                     '''
                     # chi equal to one inside the body of the fish, zero outside the fish
-                    D_nodes[i_j].Fx = -1*D_nodes[i_j].chi/nu*(D_nodes[i_j].vx-D_nodes[i_j].vbodyx)
-                    D_nodes[i_j].Fy = -1*D_nodes[i_j].chi/nu*(D_nodes[i_j].vy-D_nodes[i_j].vbodyy)
+                    Fx[i, j] = -1*chi[i, j]/nu*(vx[i, j]-vbodyx[i, j])
+                    Fy[i, j] = -1*chi[i, j]/nu*(vy[i, j]-vbodyy[i, j])
 
-                    fish_text += str(D_nodes[i_j])
+                    fish_text += f"{X[i, j]} {Y[i, j]} {chi[i, j]} {vx[i, j]} {vy[i, j]} {vbodyx[i, j]} {vbodyy[i, j]} \n"
 
                 else:
-                    D_nodes[i_j].chi = 0
+                    chi[i, j] = 0
             else:
-                D_nodes[i_j].chi = 0
+                chi[i, j] = 0
 
             '''
             FINITE DIFFERENCE ESTIMATIONS OF SLOPES
             '''
-            dvx_dx = (D_nodes[i1_j].vx - D_nodes[im1_j].vx)/2/d_x
-            dvx_dy = (D_nodes[i_j1].vx - D_nodes[i_jm1].vx)/2/d_y
+            dvx_dx = (vx[i+1, j] - vx[i-1, j])/2/d_x
+            dvx_dy = (vx[i, j+1] - vx[i, j-1])/2/d_y
 
 
-            dvy_dx = (D_nodes[i1_j].vy - D_nodes[im1_j].vy)/2/d_x
-            dvy_dy = (D_nodes[i_j1].vy - D_nodes[i_jm1].vy)/2/d_y
+            dvy_dx = (vy[i+1, j] - vy[i-1, j])/2/d_x
+            dvy_dy = (vy[i, j+1] - vy[i, j-1])/2/d_y
 
 
             # Laplacian operator
-            D2vx = (D_nodes[i1_j].vx -2*D_nodes[i_j].vx + D_nodes[im1_j].vx)/d_x**2 + (D_nodes[i_j1].vx -2*D_nodes[i_j].vx + D_nodes[i_jm1].vx)/d_y**2
-            D2vy = (D_nodes[i1_j].vy -2*D_nodes[i_j].vy + D_nodes[im1_j].vy)/d_x**2 + (D_nodes[i_j1].vy -2*D_nodes[i_j].vy + D_nodes[i_jm1].vy)/d_y**2
+            D2vx = (vx[i+1, j] -2*vx[i, j] + vx[i-1, j])/d_x**2 + (vx[i, j+1] -2*vx[i, j] + vx[i, j-1])/d_y**2
+            D2vy = (vy[i+1, j] -2*vy[i, j] + vy[i-1, j])/d_x**2 + (vy[i, j+1] -2*vy[i, j] + vy[i, j-1])/d_y**2
 
-            dP_dx = (D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_x
-            dP_dy = (D_nodes[i_j1].P - D_nodes[i_jm1].P)/2/d_y
+            dP_dx = (P[i+1, j] - P[i-1, j])/2/d_x
+            dP_dy = (P[i, j+1] - P[i, j-1])/2/d_y
 
             '''
             ACTUAL NAVIER-STOKES
             '''
-            dv_dtx = -1*(D_nodes[i_j].vx*dvx_dx + D_nodes[i_j].vy*dvx_dy) - 1/rho*dP_dx + kv*(D2vx) + 1/rho*D_nodes[i_j].Fx
-            dv_dty = -1*(D_nodes[i_j].vx*dvy_dx + D_nodes[i_j].vy*dvy_dy) - 1/rho*dP_dy + kv*(D2vy) + 1/rho*D_nodes[i_j].Fy
+            dv_dtx = -1*(vx[i, j]*dvx_dx + vy[i, j]*dvx_dy) - 1/rho*dP_dx + kv*(D2vx) + 1/rho*Fx[i, j]
+            dv_dty = -1*(vx[i, j]*dvy_dx + vy[i, j]*dvy_dy) - 1/rho*dP_dy + kv*(D2vy) + 1/rho*Fy[i, j]
 
 
-            D_nodes[i_j].v_starx = D_nodes[i_j].vx + dt*dv_dtx
-            D_nodes[i_j].v_stary = D_nodes[i_j].vy + dt*dv_dty
+            v_starx[i, j] = vx[i, j] + dt*dv_dtx
+            v_stary[i, j] = vy[i, j] + dt*dv_dty
 
 
             '''
             JACOBIAN ITERATION
             '''
 
-            # for n in range(1, len(x)-1):
-            #     for m in range(1, len(y)-1):
-            #         n_m = str(x[n]) + ' ' + str(y[m])
-            #         n1_m = str(x[n+1]) + ' ' + str(y[m])
-            #         n_m1 = str(x[n]) + ' ' + str(y[m+1])
-            #         nm1_m = str(x[n-1]) + ' ' + str(y[m])
-            #         n_mm1 = str(x[n]) + ' ' + str(y[m-1])
+            for n in range(1, len(x)-1):
+                for m in range(1, len(y)-1):
+                    b[n, m] = rho/dt*((v_starx[n+1, m]-v_starx[n-1, m])/2/d_x + (v_stary[n, m+1]-v_stary[n, m-1])/2/d_y)
 
-                    D_nodes[n_m].b = rho/dt*((D_nodes[n1_m].v_starx-D_nodes[nm1_m].v_starx)/2/d_x + (D_nodes[n_m1].v_stary-D_nodes[n_mm1].v_stary)/2/d_y)
-
-            D_nodes[f"{x[i]} {y[0]}"].P = D_nodes[f"{x[i]} {y[1]}"].P
-            D_nodes[f"{x[i]} {y[-1]}"].P = D_nodes[f"{x[i]} {y[-2]}"].P
-
-            D_nodes[f"{x[i]} {y[0]}"].P = D_nodes[f"{x[i]} {y[-1]}"].P
-
-            D_nodes[f"{x[0]} {y[j]}"].P = D_nodes[f"{x[1]} {y[j]}"].P
-            D_nodes[f"{x[-1]} {y[j]}"].P = D_nodes[f"{x[-2]} {y[j]}"].P
-            D_nodes[f"{x[0]} {y[0]}"].P = 0.0
-
-
-            # for k in range(50):
-            #     for n in range(1, len(x)-1):
-            #         for m in range(1, len(y)-1):
-            #             n_m = str(x[n]) + ' ' + str(y[m])
-            #             n1_m = str(x[n+1]) + ' ' + str(y[m])
-            #             n_m1 = str(x[n]) + ' ' + str(y[m+1])
-            #             nm1_m = str(x[n-1]) + ' ' + str(y[m])
-            #             n_mm1 = str(x[n]) + ' ' + str(y[m-1])
-            #
-            #             D_nodes[n_m].P = (D_nodes[n1_m].P + D_nodes[nm1_m].P + D_nodes[n_m1].P + D_nodes[n_mm1].P - D_nodes[n_m].b*d_x**2)/4
-
-
-
+            for k in range(10):
+                for n in range(1, len(x)-1):
+                    for m in range(1, len(y)-1):
+                        P[n, m] = (P[n+1, m] + P[n-1, m] + P[n, m+1] + P[n, m-1] - b[n, m]*d_x**2)/4
+                print(k)
 
             '''
             PRESSURE CORRECTED V
             '''
-            D_nodes[i_j].vx = D_nodes[i_j].v_starx - dt/rho*(D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_x
-            D_nodes[i_j].vy = D_nodes[i_j].v_stary - dt/rho*(D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_y
+            vx[i, j] = v_starx[i, j] - dt/rho*(P[i+1, j] - P[i-1, j])/2/d_x
+            vy[i, j] = v_stary[i, j] - dt/rho*(P[i+1, j] - P[i-1, j])/2/d_y
 
 
-            file_text += str(D_nodes[i_j])
+            file_text += f"{X[i, j]} {Y[i, j]} {chi[i, j]} {vx[i, j]} {vy[i, j]} {vbodyx[i, j]} {vbodyy[i, j]} \n"
 
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
