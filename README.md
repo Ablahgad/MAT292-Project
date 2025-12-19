@@ -1,4 +1,4 @@
-# MAT292 Project: CFD Solver - Ciara Browne, Nancy Fang, and Ablah Gadallah
+# MAT292 Project: CFD Solver - Ciara Browne, Nancy Fang, and Ablah Gadallah (Group 21)
 A CFD solver for modelling the motion of a Zebrafish in water using a finite difference numerical model.
 
 ## Instructions
