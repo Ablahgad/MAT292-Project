@@ -14,7 +14,7 @@ class Node:
         self.x = x
         self.y = y
 
-        self.vx = 1
+        self.vx = 26
         self.vy = 0
 
         self.vbody = 0
