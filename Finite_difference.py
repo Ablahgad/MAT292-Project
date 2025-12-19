@@ -11,11 +11,11 @@ import math
 '''
 SETTINGS
 '''
-duration = 0.002 # How long the CFD runs until, in seconds
+duration = 0.0004 # How long the CFD runs until, in seconds
 
-dt = 0.0005 # Time step for movement of fish tail in seconds
+dt = 0.0001 # Time step for movement of fish tail in seconds
 
-v_i = 0 # Initial speed of the flow in the swimming tube
+v_i = 26 # Initial speed of the flow in the swimming tube
 
 # real domain dimensions (mm)
 domain_x = 30 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
