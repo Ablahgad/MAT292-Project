@@ -14,13 +14,12 @@ class Node:
         self.x = x
         self.y = y
 
-        self.vx = 26
+        self.vx = 1
         self.vy = 0
 
         self.vbody = 0
 
-        self.Px = 0
-        self.Py = 0 #Initialize both of the pressures to zero, every resulting pressure is relative to the initial pressure within the swimming tube
+        self.P = 0 #Pressure to zero, every resulting pressure is relative to the initial pressure within the swimming tube
 
         self.chi = 0
 
@@ -39,7 +38,7 @@ rho = 1 #density
 kv = 1 # kinematic viscosity
 
 # nu is time penalty in Brinkman Penalization, determines how fast the velocity changes to the body velocity, the larger it is the more fluid it lets into the fish, smaller it is the faster the velocity change (recommended between 0.1 and 1)
-nu = 0.5
+nu = 1
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
 domain_x = 30 # full x dimension of tube is 150mm
@@ -124,14 +123,14 @@ def tail_length_helper(x, t):
 MAIN LOOP
 '''
 
-dt = 1 #time step for movement of fish tail
+dt = 0.002 #time step for movement of fish tail
 
 L_file_names = []
 L_fish_file_names = []
 # list of file names that will be read by MATLAB
 
 # changing chi for whether or not the datapoint is within the fish
-for t in np.arange(0, 5, dt):
+for t in np.arange(0, 0.5, dt):
 
     file_text = ""
     fish_text = ""
@@ -192,20 +191,25 @@ for t in np.arange(0, 5, dt):
             '''
             FINITE DIFFERENCE ESTIMATIONS OF SLOPES
             '''
-            dv_dx = (D_nodes[i1_j].vx - D_nodes[im1_j].vx)/2/d_x
-            dv_dy = (D_nodes[i_j1].vy - D_nodes[i_jm1].vy)/2/d_y
+            dvx_dx = (D_nodes[i1_j].vx - D_nodes[im1_j].vx)/2/d_x
+            dvx_dy = (D_nodes[i_j1].vx - D_nodes[i_jm1].vx)/2/d_y
+
+
+            dvy_dx = (D_nodes[i1_j].vy - D_nodes[im1_j].vy)/2/d_x
+            dvy_dy = (D_nodes[i_j1].vy - D_nodes[i_jm1].vy)/2/d_y
+
 
             # Laplacian operator
-            D2v = (D_nodes[i1_j].vx -2*D_nodes[i_j].vx + D_nodes[im1_j].vx)/d_x**2 + (D_nodes[i_j1].vy -2*D_nodes[i_j].vy + D_nodes[i_jm1].vy)/d_y**2
+            D2vx = (D_nodes[i1_j].vx -2*D_nodes[i_j].vx + D_nodes[im1_j].vx)/d_x**2 + (D_nodes[i_j1].vx -2*D_nodes[i_j].vx + D_nodes[i_jm1].vx)/d_y**2
+            D2vy = (D_nodes[i1_j].vy -2*D_nodes[i_j].vy + D_nodes[im1_j].vy)/d_x**2 + (D_nodes[i_j1].vy -2*D_nodes[i_j].vy + D_nodes[i_jm1].vy)/d_y**2
 
-            dP_dx = (D_nodes[i1_j].Px - D_nodes[im1_j].Px)/2/d_x
-            dP_dy = (D_nodes[i_j1].Py - D_nodes[i_jm1].Py)/2/d_y
+            dP_dx = (D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_x
 
             '''
             ACTUAL NAVIER-STOKES
             '''
-            dv_dtx = -1*(D_nodes[i_j].vx*dv_dx + D_nodes[i_j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*D_nodes[i_j].Fx
-            dv_dty = -1*(D_nodes[i_j].vx*dv_dx + D_nodes[i_j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*D_nodes[i_j].Fy
+            dv_dtx = -1*(D_nodes[i_j].vx*dvx_dx + D_nodes[i_j].vy*dvx_dy) - 1/rho*dP_dx + kv*(D2vx) + 1/rho*D_nodes[i_j].Fx
+            dv_dty = -1*(D_nodes[i_j].vx*dvy_dx + D_nodes[i_j].vy*dvy_dy) - 1/rho*dP_dx + kv*(D2vy) + 1/rho*D_nodes[i_j].Fy
 
 
             D_nodes[i_j].v_starx = D_nodes[i_j].vx + dt*dv_dtx
@@ -216,19 +220,19 @@ for t in np.arange(0, 5, dt):
             JACOBIAN ITERATION
             '''
 
-            b = rho/dt*(((D_nodes[i1_j].v_starx-D_nodes[im1_j].v_starx)/2/d_x + D_nodes[i_j1].v_stary-D_nodes[i_jm1].v_stary)/2/d_y)
+            b = rho/dt*((D_nodes[i1_j].v_starx-D_nodes[im1_j].v_starx)/2/d_x + (D_nodes[i_j1].v_stary-D_nodes[i_jm1].v_stary)/2/d_y)
 
+            for m in range(50):
+                D_nodes[i_j].P = (D_nodes[i1_j].P + D_nodes[im1_j].P + D_nodes[i_j1].P + D_nodes[i_jm1].P - b*d_x**2)/4
 
-            D_nodes[i_j].Px = (D_nodes[i1_j].Px + D_nodes[im1_j].Px + D_nodes[i_j1].Px + D_nodes[i_jm1].Px - b*d_x**2)/4
-            D_nodes[i_j].Py = (D_nodes[i1_j].Py + D_nodes[im1_j].Py + D_nodes[i_j1].Py + D_nodes[i_jm1].Py - b*d_x**2)/4
 
 
             '''
             PRESSURE CORRECTED V
             '''
+            D_nodes[i_j].vx = D_nodes[i_j].v_starx - dt/rho*(D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_x
+            D_nodes[i_j].vy = D_nodes[i_j].v_stary - dt/rho*(D_nodes[i1_j].P - D_nodes[im1_j].P)/2/d_y
 
-            D_nodes[i_j].vx = D_nodes[i_j].v_starx - dt/rho*(D_nodes[i1_j].Px - D_nodes[im1_j].Px)/2/d_x
-            D_nodes[i_j].vy = D_nodes[i_j].v_stary - dt/rho*(D_nodes[i1_j].Py - D_nodes[im1_j].Py)/2/d_y
 
             file_text += str(D_nodes[i_j])
 
@@ -244,70 +248,3 @@ for t in np.arange(0, 5, dt):
 L_files = []
 L_files.append(L_file_names)
 L_files.append(L_fish_file_names)
-
-
-
-
-#
-# for i in range(1, len(x)-1):
-#     for j in range(1, len(y)-1):
-#         i_j = str(x[i]) + ' ' + str(y[j])
-#         i1_j = str(x[i+1]) + ' ' + str(y[j])
-#         i_j1 = str(x[i]) + ' ' + str(y[j+1])
-#         im1_j = str(x[i-1]) + ' ' + str(y[j])
-#         i_jm1 = str(x[i]) + ' ' + str(y[j-1])
-#         im1_jm1 = str(x[i-1]) + ' ' + str(y[j-1])
-#         i1_j1 = str(x[i+1]) + ' ' + str(y[j+1])
-#
-#         '''
-#         BRINKMAN PENALIZATION
-#         '''
-#         # chi equal to one inside the body of the fish, zero outside the fish
-#         D_nodes[i_j].Fx = -1*D_nodes[i_j].chi/nu*(D_nodes[i_j].vx-vbody)
-#         D_nodes[i_j].Fy = -1*D_nodes[i_j].chi/nu*(D_nodes[i_j].vy-vbody)
-#
-#
-#         '''
-#         FINITE DIFFERENCE ESTIMATIONS OF SLOPES
-#         '''
-#         dv_dx = (D_nodes[i1_j].vx - D_nodes[im1_j].vx)/2/d_x
-#         dv_dy = (D_nodes[i_j1].vy - D_nodes[i_jm1].vy)/2/d_y
-#
-#         # Laplacian operator
-#         D2v = (D_nodes[i1_j].vx -2*D_nodes[i_j].vx + D_nodes[im1_j].vx)/d_x**2 + (D_nodes[i_j1].vy -2*D_nodes[i_j].vy + D_nodes[i_jm1].vy)/d_y**2
-#
-#         dP_dx = (D_nodes[i1_j].Px - D_nodes[im1_j].Px)/2/d_x
-#         dP_dy = (D_nodes[i_j1].Py - D_nodes[i_jm1].Py)/2/d_y
-#
-#         '''
-#         ACTUAL NAVIER-STOKES
-#         '''
-#         dv_dtx = -1*(D_nodes[i_j].vx*dv_dx + D_nodes[i_j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*D_nodes[i_j].Fx
-#         dv_dtx = -1*(D_nodes[i_j].vx*dv_dx + D_nodes[i_j].vy*dv_dy) - 1/rho*(dP_dx+dP_dy) + kv*(D2v) + 1/rho*D_nodes[i_j].Fy
-#
-#
-#         D_nodes[i_j].v_starx = D_nodes[i_j].vx + dt*dv_dtx
-#         D_nodes[i_j].v_stary = D_nodes[i_j].vy + dt*dv_dty
-#
-#
-#         '''
-#         JACOBIAN ITERATION
-#         '''
-#
-#         b = rho/dt*((D_nodes[i1_j].v_starx-D_nodes[im1_j].v_starx)/2/dx + D_nodes[i_j1].v_stary-D_nodes[i_jm1].v_stary)/2/d_y)
-#
-#
-#         D_nodes[i_j].Px = (D_nodes[i1_j].Px + D_nodes[im1_j].Px + D_nodes[i_j1].Px + D_nodes[i_jm1].Px - b*d_x**2)/4
-#         D_nodes[i_j].Py = (D_nodes[i1_j].Py + D_nodes[im1_j].Py + D_nodes[i_j1].Py + D_nodes[i_jm1].Py - b*d_x**2)/4
-#
-#
-#         '''
-#         PRESSURE CORRECTED V
-#         '''
-#
-#         D_nodes[i_j].vx = D_nodes[i_j].v_starx - dt/rho*(D_nodes[i1_j].Px - D_nodes[im1_j].Px)/2/d_x
-#         D_nodes[i_j].vy = D_nodes[i_j].v_stary - dt/rho*(D_nodes[i1_j].Py - D_nodes[im1_j].Py)/2/d_y
-#
-#
-#
-#
