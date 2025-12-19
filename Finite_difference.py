@@ -13,7 +13,7 @@ SETTINGS
 '''
 duration = 0.002 # How long the CFD runs until, in seconds
 
-dt = 0.001 # Time step for movement of fish tail in seconds
+dt = 0.0005 # Time step for movement of fish tail in seconds
 
 v_i = 0 # Initial speed of the flow in the swimming tube
 
@@ -34,7 +34,7 @@ rho = 0.001 #density in kg/mm^3
 kv = 1.004 # kinematic viscosity in mm/s
 
 # nu is time penalty in Brinkman Penalization, determines how fast the velocity changes to the body velocity, the larger it is the more fluid it lets into the fish, smaller it is the faster the velocity change (recommended between 0.1 and 1 -- it is set lower here because we wanted to emphacise the impact of the tail on the fluid)
-nu = 0.005
+nu = 0.05
 
 
 # Creates list of all x values and y values from the domain and number of divisions
