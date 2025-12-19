@@ -18,11 +18,11 @@ kv = 1 # kinematic viscosity
 nu = 0.005
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
-domain_x = 51.6 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
-domain_y = 26.7 # full y dimension of tube is 45.7
+domain_x = 30 # full x dimension of tube is 150mm but full scale is too large to see the fish properly
+domain_y = 10 # full y dimension of tube is 45.7
 
-divisions_x = 14
-divisions_y = 7
+divisions_x = 15
+divisions_y = 15
 
 D_nodes = {} #dictionary that stores all the nodes, keys are str(x_coordinate) + " " + str(y_coordinate)
 
@@ -55,7 +55,7 @@ INITIALIZING ARRAYS
 
 X, Y = np.meshgrid(x, y, indexing='ij') #array that holds x and y postion values in mm for each node
 
-vx = np.full((divisions_x*2, divisions_y*2), 26)
+vx = np.full((divisions_x*2, divisions_y*2), 0)
 
 vy = np.zeros((divisions_x*2, divisions_y*2))
 
@@ -109,7 +109,7 @@ def f_y(s, thickness):
 def y_tail(x, t):
     return (-1.2958*x + 0.5105*x**2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10 + thickness/4
 def v_tail(x, t):
-    return (-1.2958*x + 0.5105*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))/10 + 20
+    return (-1.2958*x + 0.5105*x**2)*2*math.pi*0.25*math.cos(2*math.pi*(x/29.766+0.25*t))/10
 
 def dy_dx_tail(x, t):
     return (-1.2958*x + 0.5105*x**2)*2*math.pi/29.766*math.cos(2*math.pi*(x/29.766+0.25*t))/10 + (-1.2958 + 0.5105*x*2)*math.sin(2*math.pi*(x/29.766+0.25*t))/10
@@ -127,7 +127,7 @@ L_fish_file_names = []
 # list of file names that will be read by MATLAB
 
 # changing chi for whether or not the datapoint is within the fish
-for t in np.arange(0, 0.006, dt):
+for t in np.arange(0, 0.02, dt):
 
     file_text = ""
     fish_text = ""
