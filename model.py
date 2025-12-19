@@ -14,8 +14,18 @@ class Node:
         self.x = x
         self.y = y
 
+        self.vx = 1 #!!! change to 26
+        self.vy = 0
+
+        self.vbody = 0
+
+        # self.Px =
+        # self.Py =
+
+        self.chi = 0
+
     def __str__(self):
-        return f"{self.x} {self.y} {self.chi} {self.vx} {self.vy} \n" # Add any new variables that are important to the visualization here, MATLAB only has what is printed out as a text file from this code
+        return f"{self.x} {self.y} {self.chi} {self.vx} {self.vy} {self.vbody}\n" # Add any new variables that are important to the visualization here, MATLAB only has what is printed out as a text file from this code
 
 #input section - real domain dimensions (mm), number of nodes along x, number of nodes along y
 domain_x = 30 # full x dimension of tube is 150mm
@@ -59,14 +69,6 @@ for x_i in x:
         i_dict = str(x_i) + " "+ str(y_i)
         D_nodes[i_dict]=Node(x_i, y_i)
 
-        D_nodes[i_dict].chi = 1
-
-        D_nodes[i_dict].vx = 26 #using 26mm/s to compare against the cruising data from the paper
-        D_nodes[i_dict].vy = 0
-
-        D_nodes[i_dict].Px =
-        D_nodes[i_dict].Py =
-
 
 # Initializing parameters for tail equations
 fish_length = 34
@@ -103,22 +105,21 @@ def tail_length_helper(x, t):
 
     #using arc length formula to find length of tail at x coordinate b starting from the base of the tail (x=0)
 
-dt = 0.2 #time step for movement of fish tail
+dt = 1 #time step for movement of fish tail
 
 L_file_names = []
+L_fish_file_names = []
 # list of file names that will be read by MATLAB
 
 # changing chi for whether or not the datapoint is within the fish
 for t in np.arange(0, 5, dt):
 
     file_text = ""
+    fish_text = ""
     index = 0
     for xi in x:
         for yi in y:
             i_dict = str(xi) + " "+ str(yi)
-
-            D_nodes[i_dict].vx = 1
-            D_nodes[i_dict].vy = 1
 
             s_i = f_s(xi, head, tail)
             if s_i < 1 and s_i > 0:
@@ -132,25 +133,34 @@ for t in np.arange(0, 5, dt):
                 else:
                     y_i = f_y(s_i, thickness)
                     y_i_bot = -1*f_y(s_i, thickness)
+
+
                 if yi>y_i_bot and yi<y_i:
                     D_nodes[i_dict].chi = 1
-                    D_nodes[i_dict].vx = 0
-                    D_nodes[i_dict].vy = 0
+
                     if xi > 0:
                         D_nodes[i_dict].vbody = v_tail(xi, t)
+
+                    fish_text += str(D_nodes[i_dict])
+
                 else:
                     D_nodes[i_dict].chi = 0
+
+                    file_text += str(D_nodes[i_dict])
             else:
                 D_nodes[i_dict].chi = 0
-            index += 1
 
-            file_text += str(D_nodes[i_dict])
+                file_text += str(D_nodes[i_dict])
+            index += 1
 
     with open("dataout/nodes" +str(t)+ ".txt", "w") as file:
         file.write(file_text)
+    with open("dataout/fish" +str(t)+ ".txt", "w") as file:
+        file.write(fish_text)
 
     L_file_names.append("dataout/nodes" +str(t)+ ".txt")
+    L_fish_file_names.append("dataout/fish" +str(t)+ ".txt")
 
-
-    with open("dataout/filenames.txt", "w") as file:
-        file.write(str(L_file_names))
+L_files = []
+L_files.append(L_file_names)
+L_files.append(L_fish_file_names)
