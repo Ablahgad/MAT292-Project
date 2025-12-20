@@ -2,4 +2,9 @@
 A CFD solver for modelling the motion of a Zebrafish in water using a finite difference numerical model. Experimental data used for comparison sourced from ["Zebrafish swimming in the flow: a particle image velocimetry study" by Mwaffo et al](https://pmc.ncbi.nlm.nih.gov/articles/PMC5691796/).
 
 ## Instructions
-All code can be run from the [visualizer.mlx file](visualizer.mlx). Within this MATLAB file the code for running the finite difference solver, as well as significant outputs are included. To display the solver velocity field output run the desired live script section in the [MATLAB file](visualizer.mlx). The actual solver may be found in the [Finite_difference.py file](Finite_difference.py), be sure to change the working directory to the repository before running the solver directly. Values such as the duration of time, time step, and number of nodes may also be altered in this file. MATLAB file will also output GIF of outputted vector fields as [nodes.gif](nodes.gif). Please be warned that this solver is prone to blowing up when the duration is high.
+1. Download repository and ensure essential libraries (scipy, numpy) are downloaded, change the working directory to the repository
+2. Settings for the finite difference solver can be changed from the [Finite_difference.py file](Finite_difference.py)
+3. Run solver or precalculated (flow speed equal to zero or 26mm/s) examples from the [visualizer.mlx file](visualizer.mlx)
+4. Run percent difference visualization from the [Percent_Difference.py file] (Percent_Difference.py)
+
+MATLAB file will also output GIF of outputted vector fields as [nodes.gif](nodes.gif). Please be warned that this solver is prone to blowing up when the duration is high.
