@@ -8,4 +8,4 @@ A CFD solver for modelling the motion of a Zebrafish in water using a finite dif
 4. Run percent difference calculation from the [Percent_Difference.py file](Percent_Difference.py) to compare calculated value with experimental PIV values. **Ensure divisions_x = 25 and divisions_y = 21**
 5. Visualize percent difference in the respective section of the  [visualizer.mlx file](visualizer.mlx)
 
-MATLAB file will also output GIF of outputted vector fields as [nodes.gif](nodes.gif). Please be warned that this solver is prone to blowing up when the duration is high.
+MATLAB file will also output GIF of outputted vector fields as [nodes.gif](nodes.gif). Please be warned that this solver is prone to blowing up when the time duration or time step are too large.
